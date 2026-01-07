@@ -42,23 +42,24 @@ final class httpClientTests: XCTestCase {
             let update_time :Int64
         }
         
-        try await  getJson(
-                    url: "https://nlight.stcoin.uk/admin/api/ios/node",
-                    inParam: nil,
-                    timeout: 30
-                ) { data, code in
-                    do {
-                        let ret : [Node]? = try parseResponse(data: data, httpCode: code)
-                        if let list = ret{
-                            for item in list{
-                                print(item)
-                            }
-                        }
-                    }catch {
-                        print("parse error:",error)
-                    }
+        do{
+            let list:[Node]? = try await getJson(
+                url: "https://badu.com/admin/api/ios/node",
+                 inParam: nil,
+                 timeout: 30
+            )
+            
+            if let list { //可选要解包
+                for item in list {
+                    print(item)
                 }
-        
+            }else {
+                print("error")
+            }
+        }catch{
+            print("网络出错了",error)
+        }
+       
     }
 
 }

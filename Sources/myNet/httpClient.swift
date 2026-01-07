@@ -14,14 +14,18 @@ public enum HttpMethod : String {
     case delete = "DELETE"
 }
 
-public struct BaseResp<T:Codable>:Codable {
+public struct BaseResp<T:Decodable>:Decodable {
     let code :Int
     let msg: String
     let data:T?
 }
 
+public enum ApiError: Error {
+    case http(code: Int)
+    case server(code: Int, msg: String)
+}
+
 public typealias ReqCallback = (inout URLRequest) throws -> (TimeInterval)
-public typealias ParseCallback = (Data,Int) throws -> Void
 
 let ContentTypeJson = "application/json"
 let ContentTypeForm = "application/x-www-form-urlencoded"
@@ -30,9 +34,8 @@ let ContentTypeForm = "application/x-www-form-urlencoded"
 public func doReq(
     method: HttpMethod,
     url: String,
-    reqCB: ReqCallback?,
-    parseCB: ParseCallback?
-) async throws {
+    reqCB: ReqCallback?
+) async throws ->(Data,Int) {
 
     guard let urlObj = URL(string: url) else {
         throw URLError(.badURL)
@@ -40,8 +43,6 @@ public func doReq(
 
     var request = URLRequest(url: urlObj)
     request.httpMethod = method.rawValue
-    
-//    var isTLS = url.lowercased().hasPrefix("https")
 
     var timeout: TimeInterval = 30
     if let cb = reqCB {
@@ -59,18 +60,17 @@ public func doReq(
         throw URLError(.badServerResponse)
     }
 
-    try parseCB?(data, httpResp.statusCode)
+    return (data,httpResp.statusCode)
 }
 
 
-public func getJson(
+public func getJson<T:Decodable>(
     url: String,
     inParam: Encodable?,
-    timeout: TimeInterval,
-    parseCB: ParseCallback?
-) async throws {
+    timeout: TimeInterval
+) async throws ->T? {
     
-    try await doReq(
+    let (data,httpCode) = try await doReq(
            method: .get,
            url: url,
            reqCB: { req in
@@ -82,19 +82,19 @@ public func getJson(
                }
 
                return timeout
-           },
-           parseCB: parseCB
+           }
        )
+    
+    return try parseResponse(data: data, httpCode: httpCode)
 }
 
-public func postJson(
+public func postJson<T:Decodable>(
     url: String,
     inParam: Encodable?,
-    timeout: TimeInterval,
-    parseCB: ParseCallback?
-) async throws {
+    timeout: TimeInterval
+) async throws ->T? {
     
-    try await doReq(
+    let (data,code) =  try await doReq(
         method: .post,
         url: url,
         reqCB: { req in
@@ -106,45 +106,43 @@ public func postJson(
             }
 
             return timeout
-        },
-        parseCB: parseCB
+        }
     )
+    return try parseResponse(data: data, httpCode: code)
 }
 
-public func getQuery(
+public func getQuery<T:Decodable>(
     url: String,
     params: [String: String],
     timeout: TimeInterval,
-    parseCB: ParseCallback?
-) async throws {
-
+) async throws -> T? {
     var comp = URLComponents(string: url)!
     comp.queryItems = params.map { URLQueryItem(name: $0.key, value: $0.value) }
 
-    try await doReq(
+    let (data,code) = try await doReq(
         method: .get,
         url: comp.string!,
         reqCB: { req in
             req.addValue(ContentTypeForm, forHTTPHeaderField: "Content-Type")
             return timeout
-        },
-        parseCB: parseCB
+        }
     )
+    
+    return try parseResponse(data: data, httpCode: code)
 }
 
 
-public func postForm(
+public func postForm<T:Decodable>(
     url: String,
     values: [String: String],
     timeout: TimeInterval,
-    parseCB: ParseCallback?
-) async throws {
+) async throws -> T? {
 
     let form = values
         .map { "\($0.key)=\($0.value)" }
         .joined(separator: "&")
 
-    try await doReq(
+    let (data,code) = try await doReq(
         method: .post,
         url: url,
         reqCB: { req in
@@ -152,34 +150,27 @@ public func postForm(
             req.httpBody = form.data(using: .utf8)
 
             return timeout
-        },
-        parseCB: parseCB
+        }
     )
+    
+    return try parseResponse(data: data, httpCode: code)
 }
 
 
 //通用响应结构处理
-public func parseResponse<T: Codable>(
+public func parseResponse<T: Decodable>(
     data: Data,
-    httpCode: Int,
-    onCodeErr: ((Int) -> Void)? = nil
+    httpCode: Int
 ) throws -> T? {
     
     guard httpCode == 200 else {
-        onCodeErr?(httpCode)
-        throw URLError(.badServerResponse)
+        throw ApiError.http(code: httpCode)
     }
 
     let resp = try JSONDecoder().decode(BaseResp<T>.self, from: data)
 
     if resp.code != 0 {
-        onCodeErr?(resp.code)
-
-        throw NSError(
-            domain: "API",
-            code: resp.code,
-            userInfo: [NSLocalizedDescriptionKey: resp.msg]
-        )
+        throw ApiError.server(code: resp.code, msg: resp.msg)
     }
 
     return resp.data
