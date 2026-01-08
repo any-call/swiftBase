@@ -20,9 +20,19 @@ public struct BaseResp<T:Decodable>:Decodable {
     let data:T?
 }
 
-public enum ApiError: Error {
+public enum ApiError: LocalizedError {
     case http(code: Int)
     case server(code: Int, msg: String)
+    
+    public var localizedDescription: String{
+        switch self {
+        case .http(let code):
+            // 返回您希望用户看到的友好描述
+            return "HTTP请求失败，状态码：\(code)"
+        case .server(let code, let msg):
+            return "服务器返回错误：代码 \(code)，信息：\(msg)"
+        }
+    }
 }
 
 public typealias ReqCallback = (inout URLRequest) throws -> (TimeInterval)
