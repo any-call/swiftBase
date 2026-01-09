@@ -20,17 +20,16 @@ public struct BaseResp<T:Decodable>:Decodable {
     let data:T?
 }
 
-public enum ApiError: LocalizedError {
+public enum ApiError: Error,LocalizedError {
     case http(code: Int)
     case server(code: Int, msg: String)
     
-    public var localizedDescription: String{
+    public var errorDescription: String? {
         switch self {
         case .http(let code):
-            // 返回您希望用户看到的友好描述
-            return "HTTP请求失败，状态码：\(code)"
+            return "网络请求失败：HTTP状态码错误 (\(code))"
         case .server(let code, let msg):
-            return "服务器返回错误：代码 \(code)，信息：\(msg)"
+            return "服务器返回错误：错误码(\(code))，描述：\(msg)"
         }
     }
 }
