@@ -15,7 +15,7 @@ public extension View {
         theme: LoadingTheme = LoadingTheme()
     ) -> some View {
         self.modifier(
-            LoadingModifier(
+            MyLoadingModifier(
                 state: state,
                 theme: theme
             )

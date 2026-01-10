@@ -20,3 +20,22 @@ struct LoadingView: View {
             .scaleEffect(theme.indicatorSize / 20)
     }
 }
+
+
+struct LoadingContentView: View {
+
+    let config: LoadingConfig
+    let theme: LoadingTheme
+
+    var body: some View {
+        VStack(spacing: config.spacing) {
+            LoadingView(theme: theme)
+
+            if let text = config.text {
+                Text(text)
+                    .foregroundColor(config.textColor)
+                    .font(.footnote)
+            }
+        }
+    }
+}

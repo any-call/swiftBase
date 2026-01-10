@@ -8,11 +8,16 @@
 
 import SwiftUI
 
-struct LoadingModifier: ViewModifier {
+struct MyLoadingModifier: ViewModifier {
 
     @Binding var state: LoadingState
     let theme: LoadingTheme
 
+    init(state: Binding<LoadingState>, theme: LoadingTheme = LoadingTheme()) {
+        self._state = state
+        self.theme = theme
+    }
+    
     func body(content: Content) -> some View {
         ZStack {
             content
@@ -21,30 +26,39 @@ struct LoadingModifier: ViewModifier {
             case .hidden:
                 EmptyView()
 
-            case .loading(let style):
-                overlayView(style: style)
+            case .fullscreen(let config):
+                fullscreen(config)
+
+            case .overlay(let config):
+                overlay(config)
+
+            case .inline(let config):
+                LoadingContentView(config: config, theme: theme)
+                    .allowsHitTesting(false)
             }
         }
     }
 
-    @ViewBuilder
-    private func overlayView(style: LoadingStyle) -> some View {
-        switch style {
-
-        case .fullscreen:
+    private func fullscreen(_ config: LoadingConfig) -> some View {
+        ZStack {
             theme.backgroundColor
                 .ignoresSafeArea()
-                .overlay(LoadingView(theme: theme))
-                .allowsHitTesting(true)
 
-        case .overlay:
+            LoadingContentView(
+                config: config,
+                theme: theme
+            )
+        }
+    }
+
+    private func overlay(_ config: LoadingConfig) -> some View {
+        ZStack {
             theme.backgroundColor
-                .overlay(LoadingView(theme: theme))
-                .allowsHitTesting(true)
 
-        case .inline:
-            LoadingView(theme: theme)
-                .allowsHitTesting(false)
+            LoadingContentView(
+                config: config,
+                theme: theme
+            )
         }
     }
 }
