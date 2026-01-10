@@ -7,7 +7,6 @@
 
 import Foundation
 import Combine
-import myNet
 
 @MainActor
 public final class ListVM<Item>: ObservableObject {
