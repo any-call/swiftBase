@@ -18,5 +18,5 @@ public enum DataState<Item> {
 
 
 public enum myVM {
-    typealias List<Item> = ListVM<Item>
+    public typealias List<Item> = ListVM<Item> //typealias 不会继承 enum 的 public，必须加public 
 }
