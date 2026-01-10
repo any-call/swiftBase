@@ -15,14 +15,6 @@ let package = Package(
             name: "swiftBase",
             targets: ["swiftBase"]
         ),
-        .library(
-            name: "myNet",
-            targets: ["myNet"]
-        ),
-        .library(
-            name: "myVM",
-            targets: ["myVM"]
-        ),
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -30,11 +22,9 @@ let package = Package(
         .target(
             name: "swiftBase"
         ),
-        .target(name: "myNet"),
-        .target(name: "myVM"),
         .testTarget(
             name: "swiftBaseTests",
-            dependencies: ["swiftBase","myNet","myVM"]
+            dependencies: ["swiftBase"]
         ),
     ]
 )

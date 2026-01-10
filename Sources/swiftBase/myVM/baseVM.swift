@@ -15,3 +15,8 @@ public enum DataState<Item> {
     case empty
     case failure(message: String, previous: [Item]?)
 }
+
+
+public enum myVM {
+    typealias List<Item> = ListVM<Item>
+}

@@ -6,7 +6,6 @@
 //
 
 import XCTest
-import myNet
 @testable import swiftBase
 
 final class httpClientTests: XCTestCase {
@@ -43,7 +42,7 @@ final class httpClientTests: XCTestCase {
         }
         
         do{
-            let list:[Node]? = try await getJson(
+            let list:[Node]? = try await myNet.getJson(
                 url: "https://badu.com/admin/api/ios/node",
                  inParam: nil,
                  timeout: 30
