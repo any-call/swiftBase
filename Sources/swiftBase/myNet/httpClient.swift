@@ -15,8 +15,8 @@ public enum ApiError: Error,LocalizedError {
         switch self {
         case .http(let code):
             return "HTTP状态码错误: \(code)"
-        case .server(_, let msg):
-            return "服务器返回错误：\(msg)"
+        case .server(let code, let msg):
+            return "服务器返回错误：[\(code)]\(msg)"
         }
     }
 }
