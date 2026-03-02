@@ -25,6 +25,22 @@ public struct BaseResp<T:Decodable>:Decodable {
     let data:T?
 }
 
+/// 通用的网络处理入口
+public actor NetInterceptor {
+    public static let shared = NetInterceptor()
+    
+    private var requestInterceptor: ((inout URLRequest) -> Void)?
+    
+    public func setInterceptor(
+        _ interceptor: @escaping (inout URLRequest) -> Void
+    ) {
+        self.requestInterceptor = interceptor
+    }
+    
+    public func apply(to request: inout URLRequest) {
+        requestInterceptor?(&request)
+    }
+}
 
 public enum myNet {
 }

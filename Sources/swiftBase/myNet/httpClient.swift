@@ -36,7 +36,8 @@ public extension myNet {
 
         var request = URLRequest(url: urlObj)
         request.httpMethod = method.rawValue
-
+        await NetInterceptor.shared.apply(to: &request)
+        
         var timeout: TimeInterval = 30
         if let cb = reqCB {
             timeout = try cb(&request)

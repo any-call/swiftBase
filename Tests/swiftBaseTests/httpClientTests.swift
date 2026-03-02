@@ -8,6 +8,44 @@
 import XCTest
 @testable import swiftBase
 
+struct UserInfo: Codable {
+    let userID: Int64
+    let platformID: Int64
+    let platformCode: String
+    let platformName: String
+    let mailAddr: String
+    let listInviteCode: [String]?
+    let subscribeToken: String
+    
+    enum CodingKeys: String, CodingKey {
+        case userID = "user_id"
+        case platformID = "platform_id"
+        case platformCode = "platform_code"
+        case platformName = "platform_name"
+        case mailAddr = "mail_addr"
+        case listInviteCode = "list_invite_code"
+        case subscribeToken = "subscribe_token"
+    }
+}
+
+struct LoginInfo: Codable {
+    let token: String
+    let userInfo: UserInfo
+    
+    private enum CodingKeys: String, CodingKey {
+        case token
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.token = try container.decode(String.self, forKey: .token)
+        
+        // 从同一个 JSON 解 UserInfo（扁平结构）
+        self.userInfo = try UserInfo(from: decoder)
+    }
+}
+
+
 final class httpClientTests: XCTestCase {
 
     override func setUpWithError() throws {
@@ -61,4 +99,36 @@ final class httpClientTests: XCTestCase {
        
     }
 
+    func testKK() async throws {
+        struct Node : Codable{
+            let id :Int64
+            let name :String
+            let create_time : Int64
+            let update_time :Int64
+        }
+        
+        
+        do{
+            let list:LoginInfo? = try await myNet.postForm(
+                url: "https://vpn.robotbase.top/client/api/user/login",
+                values: [
+                    "email":"test01@gmail.com",
+                    "password":"test".md5(),
+                    "os_type":"ios",
+                    ]
+                ,
+                timeout: 30)
+            
+            
+            if let list { //可选要解包
+                print("run here is :",list.token)
+                print(list.token)
+            }else {
+                print("error")
+            }
+        }catch{
+            print("网络出错了",error)
+        }
+        
+    }
 }
