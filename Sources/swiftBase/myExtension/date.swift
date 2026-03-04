@@ -7,50 +7,91 @@
 
 import Foundation
 
+public enum DateDisplayStyle {
+    case fixed
+    case localized
+}
+
 public extension Date {
     
-    // MARK: - 常用固定格式
+    // MARK: - yyyy-MM-dd HH:mm
     
-    /// 2026-02-07 22:15
-    var yyyyMMddHHmm: String {
-        formatted(
-            .dateTime
-                .year()
-                .month(.twoDigits)
-                .day(.twoDigits)
-                .hour(.twoDigits(amPM: .omitted))
-                .minute(.twoDigits)
-        )
+    func yyyyMMddHHmm(style: DateDisplayStyle = .localized) -> String {
+        switch style {
+        case .localized:
+            return formatted(
+                .dateTime
+                    .year()
+                    .month(.twoDigits)
+                    .day(.twoDigits)
+                    .hour(.twoDigits(amPM: .omitted))
+                    .minute(.twoDigits)
+            )
+            
+        case .fixed:
+            return fixedFormat("yyyy-MM-dd HH:mm")
+        }
     }
     
-    /// 2026-02-07
-    var yyyyMMdd: String {
-        formatted(
-            .dateTime
-                .year()
-                .month(.twoDigits)
-                .day(.twoDigits)
-        )
+    // MARK: - yyyy-MM-dd
+    
+    func yyyyMMdd(style: DateDisplayStyle = .localized) -> String {
+        switch style {
+        case .localized:
+            return formatted(
+                .dateTime
+                    .year()
+                    .month(.twoDigits)
+                    .day(.twoDigits)
+            )
+            
+        case .fixed:
+            return fixedFormat("yyyy-MM-dd")
+        }
     }
     
-    /// 22:15
-    var HHmm: String {
-        formatted(
-            .dateTime
-                .hour(.twoDigits(amPM: .omitted))
-                .minute(.twoDigits)
-        )
+    // MARK: - HH:mm
+    
+    func HHmm(style: DateDisplayStyle = .localized) -> String {
+        switch style {
+        case .localized:
+            return formatted(
+                .dateTime
+                    .hour(.twoDigits(amPM: .omitted))
+                    .minute(.twoDigits)
+            )
+            
+        case .fixed:
+            return fixedFormat("HH:mm")
+        }
     }
     
-    /// 02-07 22:15
-    var MMddHHmm: String {
-        formatted(
-            .dateTime
-                .month(.twoDigits)
-                .day(.twoDigits)
-                .hour(.twoDigits(amPM: .omitted))
-                .minute(.twoDigits)
-        )
+    // MARK: - MM-dd HH:mm
+    
+    func MMddHHmm(style: DateDisplayStyle = .localized) -> String {
+        switch style {
+        case .localized:
+            return formatted(
+                .dateTime
+                    .month(.twoDigits)
+                    .day(.twoDigits)
+                    .hour(.twoDigits(amPM: .omitted))
+                    .minute(.twoDigits)
+            )
+            
+        case .fixed:
+            return fixedFormat("MM-dd HH:mm")
+        }
+    }
+    
+    // MARK: - 固定格式核心函数
+    
+    private func fixedFormat(_ format: String) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = format
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = .current
+        return formatter.string(from: self)
     }
     
     // MARK: - 自定义格式（支持 yyyy-MM-dd 这种）
