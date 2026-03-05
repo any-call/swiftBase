@@ -40,4 +40,5 @@ public enum DataState<Item>: Equatable {
 
 public enum myVM {
     public typealias List<Item> = ListVM<Item> //typealias 不会继承 enum 的 public，必须加public
+    public typealias Cache = CacheStore
 }
