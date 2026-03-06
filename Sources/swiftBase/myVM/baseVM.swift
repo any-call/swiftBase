@@ -8,37 +8,18 @@
 import Foundation
 
 
-public enum DataState<Item>: Equatable {
+public enum DataState: Equatable {
     case idle
-    case loading(previous: [Item]?)
-    case success([Item])
+    case loading
+    case success
     case empty
-    case failure(message: String, previous: [Item]?)
-    
-    public static func == (
-            lhs: DataState<Item>,
-            rhs: DataState<Item>
-        ) -> Bool {
-
-            switch (lhs, rhs) {
-            case (.idle, .idle):
-                return true
-            case (.loading, .loading):
-                return true
-            case (.success, .success):
-                return true
-            case (.empty, .empty):
-                return true
-            case (.failure, .failure):
-                return true
-            default:
-                return false
-            }
-        }
+    case failure(message: String)
 }
 
 
 public enum myVM {
-    public typealias List<Item> = ListVM<Item> //typealias 不会继承 enum 的 public，必须加public
-    public typealias Cache = CacheStore
+    public typealias List<Item:Codable> = ListVM<Item> //typealias 不会继承 enum 的 public，必须加public
+    public typealias Object<Item: Codable> = ObjectVM<Item>
+    public typealias CachePrefStore  = UserDefaultsStore
+    public typealias CacheDisk = DiskFileStore
 }

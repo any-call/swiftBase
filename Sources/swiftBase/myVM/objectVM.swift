@@ -1,20 +1,19 @@
 //
-//  File.swift
+//  objectVM.swift
 //  swiftBase
 //
-//  Created by jinguihua on 2026/1/8.
+//  Created by jinguihua on 2026/3/6.
 //
-
 import Foundation
 import Combine
 
 @MainActor
-public final class ListVM<Item: Codable>: ObservableObject {
+public final class ObjectVM<Item: Codable>: ObservableObject {
     
-    @Published public private(set) var items: [Item] = []
+    @Published public private(set) var item: Item?
     @Published public private(set) var state: DataState = .idle
     
-    private let fetcher: () async throws -> [Item]
+    private let fetcher: () async throws -> Item
     private let cacheKey: String?
     
     private var isLoading = false
@@ -22,16 +21,17 @@ public final class ListVM<Item: Codable>: ObservableObject {
     
     public init(
         cacheKey: String? = nil,
-        fetcher: @escaping () async throws -> [Item]
+        fetcher: @escaping () async throws -> Item
     ) {
         self.cacheKey = cacheKey
         self.fetcher = fetcher
     }
     
-    // MARK: - 加载
+    // MARK: - load
+    
     public func load(force: Bool = false) async {
         
-        // 防止重复请求
+        // 防重复请求
         if isLoading { return }
         isLoading = true
         defer { isLoading = false }
@@ -42,8 +42,8 @@ public final class ListVM<Item: Codable>: ObservableObject {
             didLoadCache = true
         }
         
-        // 如果已有数据且不是强制刷新，不需要 loading
-        if items.isEmpty || force {
+        // 没有数据或强制刷新才 loading
+        if item == nil || force {
             state = .loading
         }
         
@@ -51,57 +51,44 @@ public final class ListVM<Item: Codable>: ObservableObject {
             
             let result = try await fetcher()
             
-            if result.isEmpty {
-                
-                items = []
-                removeCache()
-                state = .empty
-                
-            } else {
-                
-                items = result
-                saveCache(result)
-                state = .success
-            }
+            item = result
+            saveCache(result)
+            state = .success
             
         } catch {
             
-            if items.isEmpty {
+            if item == nil {
                 state = .failure(message: error.localizedDescription)
             } else {
-                // 有旧数据就保持 success
+                // 有旧数据保持 success
                 state = .success
             }
         }
     }
     
-    // MARK: - 手动刷新
+    // MARK: - refresh
+    
     public func refresh() async {
         await load(force: true)
     }
 }
 
-
-// MARK: - 缓存扩展
-private extension ListVM {
+private extension ObjectVM {
     
     func loadCache() {
-        
         guard let cacheKey else { return }
         
-        guard let cache: [Item] =
-                try? DiskFileStore.load([Item].self, key: cacheKey)
-        else { return }
-        
-        items = cache
-        state = cache.isEmpty ? .empty : .success
+        if let cache: Item = try? DiskFileStore.load(Item.self, key: cacheKey) {
+            item = cache
+            state = .success
+        }
     }
     
-    func saveCache(_ items: [Item]) {
+    func saveCache(_ item: Item) {
         
         guard let cacheKey else { return }
         
-        try? DiskFileStore.save(items, key: cacheKey)
+        try? DiskFileStore.save(item, key: cacheKey)
     }
     
     func removeCache() {

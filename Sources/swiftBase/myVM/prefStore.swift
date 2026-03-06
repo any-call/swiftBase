@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct CacheStore {
+public struct UserDefaultsStore {
     
     public static func save<T: Codable>(_ object: T, key: String) throws {
         let data = try JSONEncoder().encode(object)
