@@ -135,4 +135,25 @@ public extension Date {
             return "\(days)天后"
         }
     }
+    
+    /// 转为 int64 的时间错
+    /// 秒
+    var unix:Int64 {
+        Int64(timeIntervalSince1970)
+    }
+    
+    /// 毫秒
+    var unixMilli:Int64 {
+        Int64(timeIntervalSince1970 * 1000)
+    }
+    
+    /// 微秒
+    var unixMicro:Int64 {
+        Int64(timeIntervalSince1970 * 1_000_000)
+    }
+    
+    /// 纳秒
+    var unixNano:Int64 {
+        Int64(timeIntervalSince1970 * 1_000_000_000)
+    }
 }
