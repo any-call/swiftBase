@@ -29,7 +29,7 @@ public final class ObjectVM<Item: Codable>: ObservableObject {
     
     // MARK: - load
     
-    public func load(force: Bool = false) async {
+    public func load() async {
         
         // 防重复请求
         if isLoading { return }
@@ -42,10 +42,7 @@ public final class ObjectVM<Item: Codable>: ObservableObject {
             didLoadCache = true
         }
         
-        // 没有数据或强制刷新才 loading
-        if item == nil || force {
-            state = .loading
-        }
+        state = .loading
         
         do {
             
@@ -56,20 +53,14 @@ public final class ObjectVM<Item: Codable>: ObservableObject {
             state = .success
             
         } catch {
-            
-            if item == nil {
-                state = .failure(message: error.localizedDescription)
-            } else {
-                // 有旧数据保持 success
-                state = .success
-            }
+            state = .failure(message: error.localizedDescription)
         }
     }
     
     // MARK: - refresh
     
     public func refresh() async {
-        await load(force: true)
+        await load()
     }
 }
 
@@ -80,7 +71,6 @@ private extension ObjectVM {
         
         if let cache: Item = try? DiskFileStore.load(Item.self, key: cacheKey) {
             item = cache
-            state = .success
         }
     }
     

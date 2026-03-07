@@ -29,7 +29,7 @@ public final class ListVM<Item: Codable>: ObservableObject {
     }
     
     // MARK: - 加载
-    public func load(force: Bool = false) async {
+    public func load() async {
         
         // 防止重复请求
         if isLoading { return }
@@ -42,42 +42,29 @@ public final class ListVM<Item: Codable>: ObservableObject {
             didLoadCache = true
         }
         
-        // 如果已有数据且不是强制刷新，不需要 loading
-        if items.isEmpty || force {
-            state = .loading
-        }
+        state = .loading
         
         do {
             
             let result = try await fetcher()
             
+            items = result
             if result.isEmpty {
-                
-                items = []
                 removeCache()
-                state = .empty
-                
             } else {
-                
-                items = result
                 saveCache(result)
-                state = .success
             }
+            state = .success
             
         } catch {
             
-            if items.isEmpty {
-                state = .failure(message: error.localizedDescription)
-            } else {
-                // 有旧数据就保持 success
-                state = .success
-            }
+            state = .failure(message: error.localizedDescription)
         }
     }
     
     // MARK: - 手动刷新
     public func refresh() async {
-        await load(force: true)
+        await load()
     }
 }
 
@@ -94,7 +81,6 @@ private extension ListVM {
         else { return }
         
         items = cache
-        state = cache.isEmpty ? .empty : .success
     }
     
     func saveCache(_ items: [Item]) {

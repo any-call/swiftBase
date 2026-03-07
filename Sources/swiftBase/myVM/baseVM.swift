@@ -9,10 +9,16 @@ import Foundation
 
 
 public enum DataState: Equatable {
+    /// 从未加载
     case idle
+    
+    /// 正在加载
     case loading
+
+    /// 请求成功
     case success
-    case empty
+        
+    /// 请求失败
     case failure(message: String)
 }
 
