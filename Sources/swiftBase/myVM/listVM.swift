@@ -18,7 +18,6 @@ public final class ListVM<Item: Codable>: ObservableObject {
     private let cacheKey: String?
     
     private var isLoading = false
-    private var didLoadCache = false
     
     public init(
         cacheKey: String? = nil,
@@ -26,6 +25,7 @@ public final class ListVM<Item: Codable>: ObservableObject {
     ) {
         self.cacheKey = cacheKey
         self.fetcher = fetcher
+        loadCache()
     }
     
     // MARK: - 加载
@@ -35,12 +35,6 @@ public final class ListVM<Item: Codable>: ObservableObject {
         if isLoading { return }
         isLoading = true
         defer { isLoading = false }
-        
-        // 只第一次读取缓存
-        if !didLoadCache {
-            loadCache()
-            didLoadCache = true
-        }
         
         state = .loading
         
