@@ -109,7 +109,7 @@ final class httpClientTests: XCTestCase {
         
         
         do{
-            let list:LoginInfo? = try await myNet.postForm(
+            let list:LoginInfo = try await myNet.postForm(
                 url: "https://vpn.robotbase.top/client/api/user/login",
                 values: [
                     "email":"test01@gmail.com",
@@ -120,12 +120,10 @@ final class httpClientTests: XCTestCase {
                 timeout: 30)
             
             
-            if let list { //可选要解包
-                print("run here is :",list.token)
-                print(list.token)
-            }else {
-                print("error")
-            }
+          
+          print("run here is :",list.token)
+          print(list.token)
+            
         }catch{
             print("网络出错了",error)
         }

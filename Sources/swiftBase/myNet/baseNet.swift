@@ -26,8 +26,8 @@ public struct BaseResp<T:Decodable>:Decodable {
 }
 
 /// 通用的网络处理入口
-public actor NetInterceptor {
-    public static let shared = NetInterceptor()
+public actor NetRequestInterceptor{
+    public static let shared = NetRequestInterceptor()
     
     private var requestInterceptor: ((inout URLRequest) -> Void)?
     
@@ -39,6 +39,31 @@ public actor NetInterceptor {
     
     public func apply(to request: inout URLRequest) {
         requestInterceptor?(&request)
+    }
+}
+
+public actor NetResponseInterceptor {
+    
+    public static let shared = NetResponseInterceptor()
+    
+    private var interceptor: ((Data, Int) async throws -> (Data, Int))?
+    
+    public func setInterceptor(
+        _ handler: @escaping (Data, Int) async throws -> (Data, Int)
+    ) {
+        interceptor = handler
+    }
+    
+    public func apply(
+        data: Data,
+        code: Int
+    ) async throws -> (Data, Int) {
+        
+        if let interceptor {
+            return try await interceptor(data, code)
+        }
+        
+        return (data, code)
     }
 }
 

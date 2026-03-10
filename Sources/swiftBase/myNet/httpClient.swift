@@ -21,9 +21,12 @@ public enum ApiError: Error,LocalizedError {
     }
 }
 
-
+public struct EmptyResponse: Decodable {}
 
 public extension myNet {
+    private static let session = URLSession(configuration: .default)
+    private static let decoder = JSONDecoder()
+    
     static func doReq(
         method: HttpMethod,
         url: String,
@@ -36,17 +39,14 @@ public extension myNet {
 
         var request = URLRequest(url: urlObj)
         request.httpMethod = method.rawValue
-        await NetInterceptor.shared.apply(to: &request)
+        await NetRequestInterceptor.shared.apply(to: &request)
         
         var timeout: TimeInterval = 30
         if let cb = reqCB {
             timeout = try cb(&request)
         }
 
-        let config = URLSessionConfiguration.default
-        config.timeoutIntervalForRequest = timeout
-
-        let session = URLSession(configuration: config)
+        request.timeoutInterval = timeout
 
         let (data, response) = try await session.data(for: request)
 
@@ -54,6 +54,11 @@ public extension myNet {
             throw URLError(.badServerResponse)
         }
 
+        let (newData,newCode) = try await NetResponseInterceptor.shared.apply(
+            data: data,
+            code: httpResp.statusCode
+        )
+        
         return (data,httpResp.statusCode)
     }
 
@@ -61,7 +66,7 @@ public extension myNet {
         url: String,
         inParam: Encodable?,
         timeout: TimeInterval
-    ) async throws ->T? {
+    ) async throws ->T {
         
         let (data,httpCode) = try await doReq(
                method: .get,
@@ -85,7 +90,7 @@ public extension myNet {
         url: String,
         inParam: Encodable?,
         timeout: TimeInterval
-    ) async throws ->T? {
+    ) async throws ->T {
         
         let (data,code) =  try await doReq(
             method: .post,
@@ -108,7 +113,7 @@ public extension myNet {
         url: String,
         params: [String: String],
         timeout: TimeInterval,
-    ) async throws -> T? {
+    ) async throws -> T {
         var comp = URLComponents(string: url)!
         comp.queryItems = params.map { URLQueryItem(name: $0.key, value: $0.value) }
 
@@ -128,10 +133,12 @@ public extension myNet {
         url: String,
         values: [String: String],
         timeout: TimeInterval,
-    ) async throws -> T? {
+    ) async throws -> T {
 
         let form = values
-            .map { "\($0.key)=\($0.value)" }
+            .map {
+                "\($0.key)=\($0.value.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
+            }
             .joined(separator: "&")
 
         let (data,code) = try await doReq(
@@ -152,19 +159,28 @@ public extension myNet {
     static func parseResponse<T: Decodable>(
         data: Data,
         httpCode: Int
-    ) throws -> T? {
+    ) throws -> T {
         
         guard httpCode == 200 else {
             throw ApiError.http(code: httpCode)
         }
 
-        let resp = try JSONDecoder().decode(BaseResp<T>.self, from: data)
+        let resp = try decoder.decode(BaseResp<T>.self, from: data)
 
         if resp.code != 0 {
             throw ApiError.server(code: resp.code, msg: resp.msg)
         }
 
-        return resp.data
+        // data 为空时返回 EmptyResponse
+        if let value = resp.data {
+            return value
+        }
+        
+        if T.self == EmptyResponse.self {
+            return EmptyResponse() as! T
+        }
+        
+        throw ApiError.server(code: -1, msg: "响应数据为空")
     }
 
 }
