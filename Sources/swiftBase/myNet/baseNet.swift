@@ -25,7 +25,7 @@ public struct BaseResp<T:Decodable>:Decodable {
     let data:T?
 }
 
-/// 通用的网络处理入口
+//MARK: 通用的网络处理入口中断
 public actor NetRequestInterceptor{
     public static let shared = NetRequestInterceptor()
     
@@ -42,6 +42,7 @@ public actor NetRequestInterceptor{
     }
 }
 
+//MARK: 通用网络响应中断
 public actor NetResponseInterceptor {
     
     public static let shared = NetResponseInterceptor()
@@ -64,6 +65,24 @@ public actor NetResponseInterceptor {
         }
         
         return (data, code)
+    }
+}
+
+//MARK: 业务错误处理回调
+public actor NetBusinessHandler {
+    
+    public static let shared = NetBusinessHandler()
+    
+    private var handler: ((Int,String) async -> Void)?
+    
+    public func setHandler(
+        _ handler: @escaping (Int,String) async -> Void
+    ) {
+        self.handler = handler
+    }
+    
+    public func handle(code:Int,msg:String) async {
+        await handler?(code,msg)
     }
 }
 

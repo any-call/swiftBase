@@ -168,6 +168,16 @@ public extension myNet {
         let resp = try decoder.decode(BaseResp<T>.self, from: data)
 
         if resp.code != 0 {
+            let code = resp.code
+            let msg = resp.msg
+            
+            Task {
+                await NetBusinessHandler.shared.handle(
+                    code: code,
+                    msg: msg
+                )
+            }
+            
             throw ApiError.server(code: resp.code, msg: resp.msg)
         }
 
