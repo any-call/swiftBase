@@ -54,12 +54,12 @@ public extension myNet {
             throw URLError(.badServerResponse)
         }
 
-        let (newData,newCode) = try await NetResponseInterceptor.shared.apply(
+        let (finalData,finalCode) = try await NetResponseInterceptor.shared.apply(
             data: data,
             code: httpResp.statusCode
         )
         
-        return (data,httpResp.statusCode)
+        return (finalData,finalCode)
     }
 
     static func getJson<T:Decodable>(
