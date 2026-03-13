@@ -9,16 +9,21 @@
 import SwiftUI
 
 public extension View {
-
+    
     func myLoading(
-        _ state: Binding<LoadingState>,
-        theme: LoadingTheme = LoadingTheme()
+        _ state: LoadingState,
+        interaction: LoadingInteraction = .block,
+        style: LoadingStyle = LoadingStyle()
     ) -> some View {
-        self.modifier(
-            MyLoadingModifier(
+        
+        modifier(
+            LoadingModifier(
                 state: state,
-                theme: theme
+                interaction: interaction,
+                style: style
             )
         )
+        
     }
+    
 }
