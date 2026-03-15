@@ -40,7 +40,7 @@ public struct ToastStyle {
     }
 }
 
-extension ToastStyle {
+public extension ToastStyle {
     
     static var `default`: ToastStyle {
         ToastStyle()
