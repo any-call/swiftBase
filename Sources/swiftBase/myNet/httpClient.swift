@@ -26,20 +26,6 @@ public struct EmptyResponse: Decodable {}
 public extension myNet {
     private static let session = URLSession(configuration: .default)
     private static let decoder = JSONDecoder()
-    private static let parserLock = NSLock()
-    private static var _globalResponseParser: (any MyNetResponseParser)?
-    
-    public static func setGlobalResponseParser(_ parser: (any MyNetResponseParser)?) {
-        parserLock.lock()
-        defer { parserLock.unlock() }
-        _globalResponseParser = parser
-    }
-    
-    static var globalResponseParser: (any MyNetResponseParser)? {
-        parserLock.lock()
-        defer { parserLock.unlock() }
-        return _globalResponseParser
-    }
     
     static func doReq(
         method: HttpMethod,
