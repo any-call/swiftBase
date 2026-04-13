@@ -88,3 +88,13 @@ public actor NetBusinessHandler {
 
 public enum myNet {
 }
+
+
+//MARK: 响应解析
+public protocol MyNetResponseParser: Sendable {
+    func parse<T: Decodable>(
+        data: Data,
+        httpCode: Int,
+        decoder: JSONDecoder
+    ) throws -> T
+}
