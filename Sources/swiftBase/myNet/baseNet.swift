@@ -86,6 +86,26 @@ public actor NetBusinessHandler {
     }
 }
 
+//MARK: 业务成功码策略
+public actor NetResponsePolicy {
+    public static let shared = NetResponsePolicy()
+
+    private var successCodes: Set<Int> = [0]
+
+    public func setSuccessCodes(_ codes: Set<Int>) {
+        successCodes = codes
+    }
+
+    public func isSuccess(_ code: Int) -> Bool {
+        successCodes.contains(code)
+    }
+}
+
 public enum myNet {
 }
 
+public extension myNet {
+    static func setSuccessCodes(_ codes: Set<Int>) async {
+        await NetResponsePolicy.shared.setSuccessCodes(codes)
+    }
+}

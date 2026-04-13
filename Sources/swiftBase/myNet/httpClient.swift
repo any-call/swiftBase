@@ -83,7 +83,7 @@ public extension myNet {
                }
            )
         
-        return try parseResponse(data: data, httpCode: httpCode)
+        return try await parseResponse(data: data, httpCode: httpCode)
     }
     
     static func postJson<T:Decodable>(
@@ -106,7 +106,7 @@ public extension myNet {
                 return timeout
             }
         )
-        return try parseResponse(data: data, httpCode: code)
+        return try await parseResponse(data: data, httpCode: code)
     }
     
     static func getQuery<T:Decodable>(
@@ -126,7 +126,7 @@ public extension myNet {
             }
         )
         
-        return try parseResponse(data: data, httpCode: code)
+        return try await parseResponse(data: data, httpCode: code)
     }
     
     static func postForm<T:Decodable>(
@@ -152,14 +152,14 @@ public extension myNet {
             }
         )
         
-        return try parseResponse(data: data, httpCode: code)
+        return try await parseResponse(data: data, httpCode: code)
     }
     
     //通用响应结构处理
     static func parseResponse<T: Decodable>(
         data: Data,
         httpCode: Int
-    ) throws -> T {
+    ) async throws -> T {
         
         guard httpCode == 200 else {
             throw ApiError.http(code: httpCode)
@@ -167,16 +167,12 @@ public extension myNet {
 
         let resp = try decoder.decode(BaseResp<T>.self, from: data)
 
-        if resp.code != 0 {
-            let code = resp.code
-            let msg = resp.msg
-            
-            Task {
-                await NetBusinessHandler.shared.handle(
-                    code: code,
-                    msg: msg
-                )
-            }
+        let isSuccess = await NetResponsePolicy.shared.isSuccess(resp.code)
+        if !isSuccess {
+            await NetBusinessHandler.shared.handle(
+                code: resp.code,
+                msg: resp.msg
+            )
             
             throw ApiError.server(code: resp.code, msg: resp.msg)
         }
@@ -194,4 +190,3 @@ public extension myNet {
     }
 
 }
-
