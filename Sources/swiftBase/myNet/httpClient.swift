@@ -109,6 +109,27 @@ public extension myNet {
         return try await parseResponse(data: data, httpCode: code)
     }
     
+    static func putJson<T:Decodable>(
+        url: String,
+        inParam: Encodable?,
+        timeout: TimeInterval
+    ) async throws ->T {
+        let (data,code) =  try await doReq(
+            method: .put,
+            url: url,
+            reqCB: { req in
+                req.addValue(ContentTypeJson, forHTTPHeaderField: "Content-Type")
+                if let param = inParam {
+                    let data = try JSONEncoder().encode(param)
+                    req.httpBody = data
+                }
+
+                return timeout
+            }
+        )
+        return try await parseResponse(data: data, httpCode: code)
+    }
+    
     static func getQuery<T:Decodable>(
         url: String,
         params: [String: String],
