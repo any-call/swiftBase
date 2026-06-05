@@ -5,6 +5,9 @@
 //  Created by jinguihua on 2026/3/13.
 //
 
+#if os(iOS)
+import UIKit
+
 extension myUI {
     
     public enum Haptic {
@@ -37,3 +40,4 @@ extension myUI {
     }
     
 }
+#endif
